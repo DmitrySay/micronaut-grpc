@@ -1,0 +1,14 @@
+micronaut:
+  application:
+    name: micronaut-grpc-client
+
+grpc:
+  client:
+    plaintext: true
+    max-retry-attempts: 10
+
+#  channels:
+#    greeter:
+#      address: '${my.server}:${my.port}'
+#      plaintext: true
+#      max-retry-attempts: 10

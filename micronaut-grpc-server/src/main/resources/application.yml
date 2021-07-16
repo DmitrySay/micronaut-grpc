@@ -1,0 +1,11 @@
+micronaut:
+  application:
+    name: micronaut-grpc-server
+
+grpc:
+  server:
+    port: 8080
+    max-inbound-message-size: 1024
+#    ssl:
+#      cert-chain: 'file://path/to/my.cert'
+#      private-key: 'classpath:my.key'
