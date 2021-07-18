@@ -13,18 +13,16 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 
-@Singleton
+//@Singleton
 public class GenerateMessage {
-    private final Clients clients;
     private final ManagedChannel managedChannel;
 
-    @Inject
-    public GenerateMessage(Clients clients, @GrpcChannel("http://localhost:8080") ManagedChannel managedChannel) {
-        this.clients = clients;
+    //@Inject
+    public GenerateMessage(@GrpcChannel("demo-service") ManagedChannel managedChannel) {
         this.managedChannel = managedChannel;
     }
 
-    @EventListener
+    //@EventListener
     public void generateMessage(StartupEvent event) {
         System.out.println("I am in generateMessage ");
         DemoServiceGrpc.DemoServiceBlockingStub stub = DemoServiceGrpc.newBlockingStub(managedChannel);

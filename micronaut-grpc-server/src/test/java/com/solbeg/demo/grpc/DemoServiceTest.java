@@ -10,7 +10,7 @@ import javax.inject.Inject;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @MicronautTest
-class DemoEndpointTest {
+class DemoServiceTest {
 
     @Inject
     DemoServiceGrpc.DemoServiceBlockingStub blockingStub;

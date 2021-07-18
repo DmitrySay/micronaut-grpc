@@ -1,14 +1,13 @@
-package com.solbeg.demo.grpc;
+package com.solbeg.demo.grpc.service;
 
 import com.demo.grpc.DemoReply;
 import com.demo.grpc.DemoRequest;
 import com.demo.grpc.DemoServiceGrpc;
 import io.grpc.stub.StreamObserver;
+import io.micronaut.grpc.annotation.GrpcService;
 
-import javax.inject.Singleton;
-
-@Singleton
-public class DemoEndpoint extends DemoServiceGrpc.DemoServiceImplBase {
+@GrpcService
+public class DemoService extends DemoServiceGrpc.DemoServiceImplBase {
 
     @Override
     public void send(DemoRequest request, StreamObserver<DemoReply> responseObserver) {
