@@ -1,46 +1,21 @@
 syntax = "proto3";
 
-package com.demo.grpc;
+package com.demo.grpc.chat;
 option java_package = "com.demo.grpc";
 option java_outer_classname = "Chat";
 option objc_class_prefix = "HLW";
 option java_multiple_files = true;
 
 service ChatService {
-  rpc join (JoinRequest) returns (JoinResponse);
-  rpc send (SendRequest) returns (SendResponse);
-  rpc getAllMessages(ChatMessagesRequest)  returns (ChatMessagesResponse);
+  rpc chat(stream ChatMessage)  returns (stream ChatMessageFromServer);
 }
 
-message JoinRequest {
-  string username = 1;
-  string channel = 2;
-}
-
-message JoinResponse {
-  string status = 1;
+message ChatMessage{
+  string from = 1;
   string message = 2;
 }
 
-message SendRequest {
-  string username = 1;
-  string channel = 2;
-  string message = 3;
+message ChatMessageFromServer{
+  ChatMessage chatMessage = 1;
 }
-
-message SendResponse {
-  string status = 1;
-  string message = 2;
-}
-
-message ChatMessagesRequest {
-  string channel = 1;
-}
-
-message ChatMessagesResponse {
-  string status = 1;
-  string channel = 2;
-  repeated string chatMessage = 3;
-}
-
 

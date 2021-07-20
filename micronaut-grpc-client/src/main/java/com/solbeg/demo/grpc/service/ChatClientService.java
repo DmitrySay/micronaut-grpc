@@ -1,58 +1,60 @@
 package com.solbeg.demo.grpc.service;
 
-import com.demo.grpc.ChatMessagesRequest;
-import com.demo.grpc.ChatMessagesResponse;
+
+import com.demo.grpc.ChatMessage;
+import com.demo.grpc.ChatMessageFromServer;
 import com.demo.grpc.ChatServiceGrpc;
-import com.demo.grpc.JoinRequest;
-import com.demo.grpc.JoinResponse;
-import com.demo.grpc.SendRequest;
-import com.demo.grpc.SendResponse;
-import io.grpc.Channel;
+import com.solbeg.demo.grpc.dto.Message;
+import io.grpc.ManagedChannel;
+import io.grpc.stub.StreamObserver;
 import io.micronaut.grpc.annotation.GrpcChannel;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
 @Singleton
 public class ChatClientService {
-    private Channel channel;
-    private final ChatServiceGrpc.ChatServiceBlockingStub blockingStub;
+    private ManagedChannel channel;
+    private final ChatServiceGrpc.ChatServiceStub stub;
+    @Getter
+    private List<Message> messages = new ArrayList<>();
 
     @Inject
-    public ChatClientService(@GrpcChannel("demo-service") Channel channel) {
+    public ChatClientService(@GrpcChannel("demo-service") ManagedChannel channel) {
         this.channel = channel;
-        blockingStub = ChatServiceGrpc.newBlockingStub(channel);
+        stub = ChatServiceGrpc.newStub(channel);
     }
 
-    public String joinChat(String name, String channel) {
-        JoinRequest request = JoinRequest.newBuilder()
-                .setUsername(name)
-                .setChannel(channel)
-                .build();
-        JoinResponse response = blockingStub.join(request);
-        return response.toString();
+    public void chat(Message message) {
+        StreamObserver<ChatMessage> observer = stub.chat(new StreamObserver<ChatMessageFromServer>() {
+            @Override
+            public void onNext(ChatMessageFromServer value) {
+                String from = value.getChatMessage().getFrom();
+                String messageFromServer = value.getChatMessage().getMessage();
+                System.out.println("Client : " + messageFromServer + " from " + from);
+                messages.add(new Message(from, messageFromServer));
+
+            }
+            @Override
+            public void onError(Throwable throwable) {
+                throwable.printStackTrace();
+            }
+
+            @Override
+            public void onCompleted() {
+                System.out.println("exit");
+            }
+        });
+
+        ChatMessage chatMessage = ChatMessage.newBuilder()
+                .setFrom(message.getFrom())
+                .setMessage(message.getMessage()).build();
+
+          observer.onNext(chatMessage);
     }
-
-    public List<String> getAllMessages(String channel) {
-        ChatMessagesRequest request = ChatMessagesRequest.newBuilder()
-                .setChannel(channel)
-                .build();
-
-        ChatMessagesResponse chatMessagesResponse = blockingStub.getAllMessages(request);
-        return chatMessagesResponse.getChatMessageList();
-
-    }
-
-    public String sendMessage(String message, String channel) {
-        SendRequest request = SendRequest.newBuilder()
-                .setMessage(message)
-                .setChannel(channel)
-                .build();
-        SendResponse response = blockingStub.send(request);
-        return response.toString();
-    }
-
 }
