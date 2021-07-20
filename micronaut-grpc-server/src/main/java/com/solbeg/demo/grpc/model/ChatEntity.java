@@ -23,4 +23,9 @@ public class ChatEntity {
 
     @EqualsAndHashCode.Exclude
     private List<String> messages = new ArrayList<>();
+
+    public ChatEntity(Long id, String channel) {
+        this.id = id;
+        this.channel = channel;
+    }
 }

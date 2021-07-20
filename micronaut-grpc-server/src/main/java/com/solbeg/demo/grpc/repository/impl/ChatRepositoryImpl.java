@@ -10,13 +10,12 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Singleton
 public class ChatRepositoryImpl implements ChatRepository {
-    @Singleton
     private Map<String, ChatEntity> chatsDatabase = new ConcurrentHashMap<>();
 
     public ChatRepositoryImpl() {
-        chatsDatabase.put("channel_1", new ChatEntity());
-        chatsDatabase.put("channel_2", new ChatEntity());
-        chatsDatabase.put("channel_3", new ChatEntity());
+        chatsDatabase.put("channel_1", new ChatEntity(1L, "channel_1"));
+        chatsDatabase.put("channel_2", new ChatEntity(2L, "channel_2"));
+        chatsDatabase.put("channel_3", new ChatEntity(3L, "channel_3"));
     }
 
     @Override

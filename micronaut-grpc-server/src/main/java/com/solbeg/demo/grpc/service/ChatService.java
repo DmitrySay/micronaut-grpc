@@ -48,6 +48,7 @@ public class ChatService extends ChatServiceGrpc.ChatServiceImplBase {
         } else {
             ChatEntity chat = chatByChannel.get();
             chat.getPeople().add(user);
+            chat.getMessages().add(username + " has joined " + channel);
             response = JoinResponse.newBuilder()
                     .setStatus("OK")
                     .setMessage(username + " has joined " + channel)
