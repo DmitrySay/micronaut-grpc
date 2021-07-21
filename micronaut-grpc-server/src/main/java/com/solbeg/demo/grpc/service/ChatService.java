@@ -1,6 +1,5 @@
 package com.solbeg.demo.grpc.service;
 
-
 import com.demo.grpc.ChatMessage;
 import com.demo.grpc.ChatMessageFromServer;
 import com.demo.grpc.ChatServiceGrpc;
@@ -20,24 +19,35 @@ public class ChatService extends ChatServiceGrpc.ChatServiceImplBase {
     @Override
     public StreamObserver<ChatMessage> chat(StreamObserver<ChatMessageFromServer> responseObserver) {
         observers.add(responseObserver);
-        return new StreamObserver<ChatMessage>() {
+        return getChatMessageStreamObserver(responseObserver);
+    }
+
+    private StreamObserver<ChatMessage> getChatMessageStreamObserver(StreamObserver<ChatMessageFromServer> responseObserver) {
+        return new StreamObserver<>() {
             @Override
             public void onNext(ChatMessage value) {
                 ChatMessageFromServer messageFromServer = ChatMessageFromServer
                         .newBuilder()
                         .setChatMessage(value)
                         .build();
-                System.out.println("Server : " + messageFromServer + " from ");
-                observers.stream().forEach(o -> o.onNext(messageFromServer));
+                System.out.println("Server :" + value);
+                //Below code example how to push message to the all clients!
+                observers.
+                        forEach(o -> o.onNext(messageFromServer));
             }
+
             @Override
             public void onError(Throwable throwable) {
                 throwable.printStackTrace();
                 observers.remove(responseObserver);
             }
+
             @Override
             public void onCompleted() {
                 observers.remove(responseObserver);
+                if (observers.isEmpty()) {
+                    responseObserver.onCompleted();
+                }
             }
         };
     }

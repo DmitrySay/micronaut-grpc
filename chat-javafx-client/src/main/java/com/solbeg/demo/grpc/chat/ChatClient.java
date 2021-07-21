@@ -2,6 +2,8 @@ package com.solbeg.demo.grpc.chat;
 
 
 import com.demo.grpc.ChatMessage;
+import com.demo.grpc.ChatMessageFromServer;
+import com.demo.grpc.ChatServiceGrpc;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.stub.StreamObserver;
@@ -17,11 +19,13 @@ import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 
 public class ChatClient extends Application {
-    private ObservableList<String> messages = FXCollections.observableArrayList();
-    private ListView<String> messagesView = new ListView<>();
-    private TextField name = new TextField("name");
-    private TextField message = new TextField();
-    private Button send = new Button();
+    public static final String HOST = "localhost";
+    public static final int PORT = 8080;
+    private final ObservableList<String> messages = FXCollections.observableArrayList();
+    private final ListView<String> messagesView = new ListView<>();
+    private final TextField name = new TextField("name");
+    private final TextField message = new TextField();
+    private final Button send = new Button();
 
     public static void main(String[] args) {
         launch(args);
@@ -30,7 +34,6 @@ public class ChatClient extends Application {
     @Override
     public void start(Stage primaryStage) {
         messagesView.setItems(messages);
-
         send.setText("Send");
 
         BorderPane pane = new BorderPane();
@@ -47,19 +50,41 @@ public class ChatClient extends Application {
 
         primaryStage.show();
 
+        //
         ManagedChannel channel = ManagedChannelBuilder
-                .forAddress("localhost", 8080)
+                .forAddress(HOST, PORT)
                 .usePlaintext()
                 .build();
 
-        com.demo.grpc.ChatServiceGrpc.ChatServiceStub chatService = com.demo.grpc.ChatServiceGrpc.newStub(channel);
+        ChatServiceGrpc.ChatServiceStub asyncStub = ChatServiceGrpc.newStub(channel);
 
-        StreamObserver<com.demo.grpc.ChatMessage> chat = chatService.chat(new StreamObserver<com.demo.grpc.ChatMessageFromServer>() {
+        StreamObserver<ChatMessage> chat = asyncStub.chat(getClientStreamObserver());
 
+        send.setOnAction(actionEvent -> {
+            ChatMessage msg = ChatMessage.newBuilder().setFrom(name.getText()).setMessage(message.getText()).build();
+            chat.onNext(msg);
+            // message.setText("");
+        });
+
+        primaryStage.setOnCloseRequest(e -> {
+            //exit message
+            ChatMessage livingMSG = ChatMessage.newBuilder()
+                    .setFrom(name.getText())
+                    .setMessage(name.getText() + " is leaving chat...")
+                    .build();
+
+            chat.onNext(livingMSG);
+            chat.onCompleted();
+            channel.shutdown();
+        });
+    }
+
+    private StreamObserver<ChatMessageFromServer> getClientStreamObserver() {
+        return new StreamObserver<>() {
             @Override
-            public void onNext(com.demo.grpc.ChatMessageFromServer value) {
+            public void onNext(ChatMessageFromServer value) {
                 Platform.runLater(() -> {
-                    messages.add(value.getChatMessage().getFrom() + ": " + value.getChatMessage().getMessage());
+                    messages.add(value.getChatMessage().getFrom() + " : " + value.getChatMessage().getMessage());
                     messagesView.scrollTo(messages.size());
                 });
             }
@@ -74,22 +99,6 @@ public class ChatClient extends Application {
             public void onCompleted() {
                 System.out.println("Disconnected");
             }
-        });
-
-        send.setOnAction(e -> {
-            chat.onNext(com.demo.grpc.ChatMessage.newBuilder().setFrom(name.getText()).setMessage(message.getText()).build());
-            message.setText("");
-        });
-
-        primaryStage.setOnCloseRequest(e -> {
-            ChatMessage livingMSG = ChatMessage.newBuilder()
-                    .setFrom(name.getText())
-                    .setMessage("I am leaving")
-                    .build();
-
-            chat.onNext(livingMSG);
-            chat.onCompleted();
-            channel.shutdown();
-        });
+        };
     }
 }
